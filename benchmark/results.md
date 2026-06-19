@@ -1,6 +1,6 @@
 # Supertonic 3 MCP — FSL Benchmark
 
-**Date:** 2026-06-16  
+**Date:** 2026-06-19  
 **Hardware:** macOS-26.5.1-arm64-arm-64bit / Apple M3  
 **supertonic:** 1.3.1  
 **Python:** 3.12.8
@@ -14,24 +14,11 @@
 
 | Scenario | Median (s) | p95 (s) | Min (s) | Max (s) |
 |----------|------------|---------|---------|---------|
-| Cold (new `TTS()` per iteration) | 1.004 | 1.128 | 0.868 | 1.130 |
-| Warm (reuse loaded `TTS`) | 1.080 | 1.158 | 0.952 | 1.240 |
+| Cold (new `TTS()` per iteration) | 0.813 | 0.847 | 0.768 | 0.889 |
+| Warm (reuse loaded `TTS`) | 0.822 | 1.218 | 0.787 | 1.766 |
 
 ## Notes
 
 - Cold includes per-iteration `TTS()` construction and model load.
 - MCP server uses eager `_tts` at import (warm path after first load).
-- Cold (1.004s) appearing faster than warm (1.080s) is expected: the OS page-cache warms model weights across cold iterations, so by iteration 2+ load cost is minimal and per-call variance dominates.
-
-## Baseline Comparison
-
-**Status: PENDING** — required before publishing latency claims in the LinkedIn post.
-
-To complete: run the intended baseline TTS tool on this Apple M3 with identical input (`Hello, this is a test of Supertonic 3 text to speech.`, 10 warm iterations), record median/p95/min/max, and fill in the row below.
-
-> Note: `dandyarise` is not an installable PyPI package (confirmed: `pip index versions dandyarise` → "No matching distribution found"). Confirm the correct tool name/install path before running the comparison.
-
-| Scenario | Median (s) | p95 (s) | Min (s) | Max (s) |
-|----------|------------|---------|---------|---------|
-| Supertonic warm (this server) | 1.080 | 1.158 | 0.952 | 1.240 |
-| dandyarise warm (baseline) | — | — | — | — |
+- Compare against HTTP-wrapped alternatives on the same hardware before publishing latency claims.

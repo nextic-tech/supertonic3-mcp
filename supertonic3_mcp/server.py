@@ -43,12 +43,12 @@ async def speak(
 
 
 @mcp.tool
-async def list_voices() -> str:
-    """List built-in Supertonic voice styles as JSON."""
+async def list_voices() -> list[dict[str, str | None]]:
+    """List built-in Supertonic voice styles."""
     return await tts.list_voices()
 
 
 @mcp.tool
-async def list_expressions() -> str:
+async def list_expressions() -> list[dict[str, str]]:
     """List inline expression tags (e.g. <laugh>) usable inside speak() text."""
     return await tts.list_expressions()

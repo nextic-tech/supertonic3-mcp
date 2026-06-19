@@ -33,7 +33,7 @@ wav, dur = tts.synthesize("Hello test.", voice_style=style, lang="en", speed=1.0
 
 **Style object:** `tts.get_voice_style(voice_name="M1")` → `supertonic.core.Style`
 
-**Note:** SDK does not expose per-voice language/gender metadata. `list_voices()` will return `voice_id` plus inferred gender from name prefix (`M`/`F`) and `language_code: null` unless we add a static map later.
+**Note:** SDK does not expose per-voice language/gender metadata. `list_voices()` returns `voice_id` plus inferred gender from a static map (`VOICE_GENDER` in `tts.py`).
 
 ---
 

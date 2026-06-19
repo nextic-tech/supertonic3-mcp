@@ -7,12 +7,17 @@ import subprocess
 import time
 import uuid
 from pathlib import Path
+from typing import Protocol
 
 from supertonic3_mcp.errors import NoAudioDeviceError
 
 TMP_DIR = Path("/tmp")
 TMP_GLOB = "supertonic_*.wav"
 TMP_MAX_AGE_SECONDS = 5 * 60
+
+
+class AudioSaver(Protocol):
+    def save_audio(self, wav: object, path: str) -> None: ...
 
 
 def sweep_tmp(max_age_seconds: int = TMP_MAX_AGE_SECONDS) -> int:
@@ -33,9 +38,9 @@ def make_tmp_wav_path() -> Path:
     return TMP_DIR / f"supertonic_{uuid.uuid4().hex}.wav"
 
 
-def write_wav(tts_engine: object, wav: object, path: Path) -> None:
+def write_wav(tts_engine: AudioSaver, wav: object, path: Path) -> None:
     """Write synthesized audio using the SDK save_audio helper."""
-    tts_engine.save_audio(wav, str(path))  # type: ignore[attr-defined]
+    tts_engine.save_audio(wav, str(path))
 
 
 def play(path: Path) -> None:

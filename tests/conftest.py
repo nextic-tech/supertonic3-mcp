@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -21,7 +19,10 @@ def mock_tts(monkeypatch):
 
     import supertonic3_mcp.tts as tts_mod
 
-    monkeypatch.setattr(tts_mod, "_tts", engine)
+    async def fake_get_tts():
+        return engine
+
+    monkeypatch.setattr(tts_mod, "_get_tts", fake_get_tts)
     return engine
 
 

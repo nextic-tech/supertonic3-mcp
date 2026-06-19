@@ -9,28 +9,20 @@ class SpeakError(Supertonic3MCPError):
     """Text-to-speech failures."""
 
 
-class VoiceNotFoundError(SpeakError):
-    """Unknown voice_id."""
+class EmptyTextError(SpeakError):
+    """Input text is empty or whitespace-only."""
 
 
 class TextTooLongError(SpeakError):
     """Input text exceeds the character limit."""
 
 
-class STTError(Supertonic3MCPError):
-    """Speech-to-text failures (reserved for v1.1)."""
+class SpeedOutOfRangeError(SpeakError):
+    """Playback speed is outside the allowed range."""
 
 
-class WhisperModelError(STTError):
-    """Whisper model missing or failed to load."""
-
-
-class MicrophoneError(STTError):
-    """Microphone unavailable."""
-
-
-class MicrophonePermissionError(MicrophoneError):
-    """Microphone permission denied."""
+class VoiceNotFoundError(SpeakError):
+    """Unknown voice_id."""
 
 
 class NoAudioDeviceError(Supertonic3MCPError):

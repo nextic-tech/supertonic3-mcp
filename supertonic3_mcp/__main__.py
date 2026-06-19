@@ -5,9 +5,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import shutil
 import sys
 from pathlib import Path
 
+from supertonic3_mcp import audio
 from supertonic3_mcp.server import mcp
 
 
@@ -21,8 +23,6 @@ def _sha256(path: Path) -> str:
 
 def run_preload() -> int:
     """Download TTS model atomically and print checksums."""
-    import shutil
-
     from supertonic.loader import download_model, get_cache_dir, has_all_onnx_modules
 
     cache_dir = get_cache_dir()
@@ -68,6 +68,7 @@ def main() -> None:
     if args.command == "preload":
         raise SystemExit(run_preload())
 
+    audio.sweep_tmp()
     mcp.run(transport="stdio")
 
 

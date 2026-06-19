@@ -3,18 +3,37 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 
 from supertonic import TTS
 
 from supertonic3_mcp import audio
-from supertonic3_mcp.errors import TextTooLongError, VoiceNotFoundError
-from supertonic3_mcp.lang import VOICE_GENDER, resolve_language, resolve_voice_id
+from supertonic3_mcp.errors import (
+    EmptyTextError,
+    SpeedOutOfRangeError,
+    TextTooLongError,
+    VoiceNotFoundError,
+)
 
 MAX_TEXT_LENGTH = 5000
 MIN_SPEED = 0.7
 MAX_SPEED = 2.0
+DEFAULT_LANGUAGE = "en"
+DEFAULT_VOICE = "M1"
+
+# Built-in voices are style presets; language is passed separately to synthesize().
+VOICE_GENDER: dict[str, str] = {
+    "M1": "male",
+    "M2": "male",
+    "M3": "male",
+    "M4": "male",
+    "M5": "male",
+    "F1": "female",
+    "F2": "female",
+    "F3": "female",
+    "F4": "female",
+    "F5": "female",
+}
 
 # Curated from Supertonic 3 docs — no SDK list_expressions() API (see notes/spike-result.md).
 EXPRESSION_CATALOG: list[dict[str, str]] = [
@@ -70,21 +89,50 @@ EXPRESSION_CATALOG: list[dict[str, str]] = [
     },
 ]
 
-_tts = TTS(auto_download=True)
+_tts: TTS | None = None
+_init_lock = asyncio.Lock()
 _onnx_lock = asyncio.Lock()
+
+
+def resolve_language(language: str | None) -> str:
+    """Return ISO 639-1 language code for synthesize().
+
+    Defaults to English when omitted. Agents must pass language= for non-English text.
+    """
+    if language is not None and language.strip():
+        return language.strip().lower()
+    return DEFAULT_LANGUAGE
+
+
+def resolve_voice(voice_id: str | None, available_voices: list[str]) -> str:
+    """Pick a voice name; raise VoiceNotFoundError when voice_id is unknown."""
+    if voice_id is not None:
+        if voice_id not in available_voices:
+            raise VoiceNotFoundError(
+                f"unknown voice_id '{voice_id}'; call list_voices() for valid values"
+            )
+        return voice_id
+    if DEFAULT_VOICE in available_voices:
+        return DEFAULT_VOICE
+    if available_voices:
+        return available_voices[0]
+    return DEFAULT_VOICE
+
+
+async def _get_tts() -> TTS:
+    global _tts
+    if _tts is not None:
+        return _tts
+    async with _init_lock:
+        if _tts is None:
+            _tts = TTS(auto_download=True)
+        return _tts
 
 
 def _duration_seconds(duration: Any) -> float:
     if hasattr(duration, "item"):
         return float(duration.item())
     return float(duration)
-
-
-def _validate_voice(voice_id: str) -> None:
-    if voice_id not in _tts.voice_style_names:
-        raise VoiceNotFoundError(
-            f"unknown voice_id '{voice_id}'; call list_voices() for valid values"
-        )
 
 
 async def speak(
@@ -96,37 +144,36 @@ async def speak(
 ) -> str:
     """Synthesize speech and return an absolute WAV path with metadata."""
     if not text.strip():
-        raise ValueError("text must be non-empty")
+        raise EmptyTextError("text must be non-empty")
     if len(text) > MAX_TEXT_LENGTH:
         raise TextTooLongError(
             f"text exceeds {MAX_TEXT_LENGTH} char limit ({len(text)} chars)"
         )
     if speed < MIN_SPEED or speed > MAX_SPEED:
-        raise ValueError(f"speed must be in [{MIN_SPEED}, {MAX_SPEED}]")
+        raise SpeedOutOfRangeError(f"speed must be in [{MIN_SPEED}, {MAX_SPEED}]")
 
-    audio.sweep_tmp()
-    lang = resolve_language(language, voice_id)
-    resolved_voice = resolve_voice_id(voice_id, language, list(_tts.voice_style_names))
-    _validate_voice(resolved_voice)
+    tts = await _get_tts()
+    lang = resolve_language(language)
+    resolved_voice = resolve_voice(voice_id, list(tts.voice_style_names))
 
-    style = _tts.get_voice_style(voice_name=resolved_voice)
+    style = tts.get_voice_style(voice_name=resolved_voice)
     wav_path = audio.make_tmp_wav_path()
 
     try:
         async with _onnx_lock:
-            wav, duration = _tts.synthesize(
+            wav, duration = tts.synthesize(
                 text,
                 voice_style=style,
                 lang=lang,
                 speed=speed,
             )
-        audio.write_wav(_tts, wav, wav_path)
+        audio.write_wav(tts, wav, wav_path)
     except Exception:
         wav_path.unlink(missing_ok=True)
         raise
 
     if play:
-        audio.play(wav_path)
+        await asyncio.to_thread(audio.play, wav_path)
 
     dur_s = _duration_seconds(duration)
     return (
@@ -135,22 +182,15 @@ async def speak(
     )
 
 
-async def list_voices() -> str:
-    """Return JSON list of available voice styles."""
-    voices: list[dict[str, str | None]] = []
-    for voice_id in _tts.voice_style_names:
-        gender = VOICE_GENDER.get(voice_id)
-        voices.append(
-            {
-                "voice_id": voice_id,
-                "language_code": None,
-                "language_name": None,
-                "gender": gender,
-            }
-        )
-    return json.dumps(voices, indent=2)
+async def list_voices() -> list[dict[str, str | None]]:
+    """Return available voice styles."""
+    tts = await _get_tts()
+    return [
+        {"voice_id": name, "gender": VOICE_GENDER.get(name)}
+        for name in tts.voice_style_names
+    ]
 
 
-async def list_expressions() -> str:
-    """Return JSON list of inline expression tags supported in speak() text."""
-    return json.dumps(EXPRESSION_CATALOG, indent=2)
+async def list_expressions() -> list[dict[str, str]]:
+    """Return inline expression tags supported in speak() text."""
+    return list(EXPRESSION_CATALOG)

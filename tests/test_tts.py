@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 
-from supertonic3_mcp.errors import TextTooLongError, VoiceNotFoundError
-from supertonic3_mcp.tts import MAX_TEXT_LENGTH, speak, list_expressions, list_voices
+from supertonic3_mcp.errors import (
+    EmptyTextError,
+    SpeedOutOfRangeError,
+    TextTooLongError,
+    VoiceNotFoundError,
+)
+from supertonic3_mcp.tts import MAX_TEXT_LENGTH, list_expressions, list_voices, speak
 
 
 @pytest.mark.asyncio
@@ -26,7 +29,7 @@ async def test_speak_happy_path(mock_tts, tmp_audio_dir, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_speak_empty_text_raises():
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(EmptyTextError, match="non-empty"):
         await speak("   ")
 
 
@@ -38,7 +41,7 @@ async def test_speak_text_too_long():
 
 @pytest.mark.asyncio
 async def test_speak_speed_out_of_range():
-    with pytest.raises(ValueError, match="speed"):
+    with pytest.raises(SpeedOutOfRangeError, match="speed"):
         await speak("hi", speed=0.5)
 
 
@@ -93,14 +96,15 @@ async def test_speak_lock_released_on_synthesize_error(mock_tts, tmp_audio_dir, 
 
 @pytest.mark.asyncio
 async def test_list_voices_json(mock_tts):
-    payload = json.loads(await list_voices())
+    payload = await list_voices()
     assert len(payload) == 2
     assert payload[0]["voice_id"] == "M1"
+    assert "language_code" not in payload[0]
 
 
 @pytest.mark.asyncio
 async def test_list_expressions_json():
-    payload = json.loads(await list_expressions())
+    payload = await list_expressions()
     tags = {row["tag"] for row in payload}
     assert "<laugh>" in tags
     assert "<pause>" in tags

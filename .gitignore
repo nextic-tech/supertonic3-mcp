@@ -9,3 +9,6 @@ dist/
 build/
 *.wav
 .DS_Store
+
+# Internal — not for public repo
+marketing/

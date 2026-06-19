@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import patch
-
 import pytest
 
 from supertonic3_mcp.__main__ import run_preload
@@ -48,26 +45,6 @@ def test_preload_incomplete_model(tmp_path, monkeypatch):
         lambda model_dir: False,
     )
     assert run_preload() == 1
-
-
-def test_download_model_cleans_temp_on_failure(tmp_path):
-    """Atomic download: interrupted move cleans temp dir and does not leave .tmp behind."""
-    from supertonic.loader import download_model
-
-    model_dir = tmp_path / "supertonic3"
-    temp_dir = tmp_path / ".supertonic3.tmp"
-
-    def fake_snapshot_download(**kwargs):
-        local = Path(kwargs["local_dir"])
-        local.mkdir(parents=True, exist_ok=True)
-        (local / "partial.onnx").write_bytes(b"partial")
-
-    with patch("huggingface_hub.snapshot_download", side_effect=fake_snapshot_download):
-        with patch("shutil.move", side_effect=OSError("interrupted")):
-            with pytest.raises(RuntimeError, match="Failed to download model"):
-                download_model(model_dir)
-
-    assert not temp_dir.exists()
 
 
 def test_preload_atomic_temp_cleaned_on_download_error(tmp_path, monkeypatch):

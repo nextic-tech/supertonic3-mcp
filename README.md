@@ -1,6 +1,8 @@
 # supertonic3-mcp
 
-Unofficial community MCP server for [Supertonic 3](https://github.com/supertone-inc/supertonic) on-device text-to-speech. Not affiliated with Supertone Inc.
+Local, on-device TTS for Claude & Cursor, powered by Supertonic 3. No API key. No cloud. An internal tool open-sourced by [Halozen](https://halozen.ai) — we build AI compliance intelligence for construction.
+
+*Not affiliated with Supertone Inc.*
 
 Expose `speak`, `list_voices`, and `list_expressions` to Claude Desktop, Cursor, or any MCP client over **STDIO**.
 
@@ -40,8 +42,8 @@ First server start downloads the Supertonic model into `~/.cache/supertonic3/` u
 | Tool | Description |
 |------|-------------|
 | `speak` | Synthesize text to a WAV file; returns absolute path + metadata |
-| `list_voices` | JSON list of built-in voices (M1–M5, F1–F5) |
-| `list_expressions` | JSON list of inline tags (`<laugh>`, `<breath>`, …) |
+| `list_voices` | Built-in voices (`voice_id`, `gender`) |
+| `list_expressions` | Inline tags (`<laugh>`, `<breath>`, …) with descriptions |
 
 ### `speak` parameters
 
@@ -49,7 +51,9 @@ First server start downloads the Supertonic model into `~/.cache/supertonic3/` u
 - `voice_id` — optional (`M1`, `F1`, …)
 - `language` — ISO 639-1 (`en`, `ko`, `ja`, …). **For non-English text, always set `language=`.** Defaults to `en`.
 - `speed` — `0.7` to `2.0` (SDK range)
-- `play` — if `true`, plays audio on **this machine** via `afplay` (macOS) or `aplay` (Linux)
+- `play` — if `true`, plays audio on **this machine** via `afplay` (macOS) or `aplay` (Linux). Unsupported on Windows.
+
+WAV files are written to `/tmp/supertonic_*.wav` (macOS/Linux). Windows is not supported for synthesis output paths in v1.0.
 
 Example return:
 
@@ -63,8 +67,8 @@ Measured on Apple M3, supertonic 1.3.1 — see [benchmark/results.md](benchmark/
 
 | Scenario | Median FSL |
 |----------|------------|
-| Warm (model loaded) | ~1.08s |
-| Cold (new `TTS()` per call) | ~1.00s |
+| Warm (model loaded) | ~0.82s |
+| Cold (new `TTS()` per call) | ~0.81s |
 
 FSL = time from `synthesize()` through WAV written (no streaming, no `play=True`).
 

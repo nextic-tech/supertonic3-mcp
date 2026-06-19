@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "supertonic3-mcp"
-version = "0.1.0"
+version = "1.0.0"
 description = "MCP server for Supertonic 3 on-device text-to-speech"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Community" }]
+authors = [{ name = "Sambit Mahapatra", email = "sambit9238@gmail.com" }]
 keywords = ["mcp", "tts", "supertonic", "speech"]
 dependencies = [
     "supertonic>=1.3.0",
