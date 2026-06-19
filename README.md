@@ -9,7 +9,7 @@ Expose `speak`, `list_voices`, and `list_expressions` to Claude Desktop, Cursor,
 ## Quick start (TTHW < 3 min)
 
 ```bash
-git clone <this-repo> && cd supertonic-tts
+git clone https://github.com/nextic-tech/supertonic3-mcp && cd supertonic3-mcp
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
