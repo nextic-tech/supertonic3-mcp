@@ -10,11 +10,29 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Sambit Mahapatra", email = "sambit9238@gmail.com" }]
-keywords = ["mcp", "tts", "supertonic", "speech"]
+keywords = ["mcp", "tts", "supertonic", "speech", "text-to-speech", "local-ai", "on-device", "fastmcp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+]
 dependencies = [
     "supertonic>=1.3.0",
     "fastmcp>=2.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nextic-tech/supertonic3-mcp"
+Repository = "https://github.com/nextic-tech/supertonic3-mcp"
+"Bug Tracker" = "https://github.com/nextic-tech/supertonic3-mcp/issues"
 
 [project.optional-dependencies]
 dev = [
